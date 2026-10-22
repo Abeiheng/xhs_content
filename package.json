@@ -1,0 +1,54 @@
+{
+  "name": "xiaohongshu",
+  "version": "1.0.0",
+  "description": "小红书公开评论关键词采集桌面工作台",
+  "main": "./out/main/index.js",
+  "author": "北恒",
+  "homepage": "https://github.com/Abeiheng/xiaohongshu",
+  "packageManager": "pnpm@8.15.1",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "format": "prettier --write .",
+    "lint": "eslint --cache .",
+    "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
+    "typecheck:web": "vue-tsc --noEmit -p tsconfig.web.json --composite false",
+    "typecheck": "npm run typecheck:node && npm run typecheck:web",
+    "start": "electron-vite preview",
+    "dev": "electron-vite dev",
+    "build": "npm run typecheck && electron-vite build",
+    "postinstall": "install-electron && electron-builder install-app-deps",
+    "build:unpack": "pnpm build && electron-builder --dir --win --x64",
+    "build:win": "pnpm build && electron-builder --win --x64",
+    "test": "vitest run",
+    "setup:mcp": "node scripts/install-mcp.mjs",
+    "build:mcp": "node scripts/build-mcp.mjs"
+  },
+  "dependencies": {
+    "@electron-toolkit/preload": "^3.0.2",
+    "@electron-toolkit/utils": "^4.0.0",
+    "@element-plus/icons-vue": "^2.3.2",
+    "electron-updater": "^6.8.9",
+    "element-plus": "^2.14.7"
+  },
+  "devDependencies": {
+    "@electron-toolkit/eslint-config-prettier": "3.0.1",
+    "@electron-toolkit/eslint-config-ts": "^4.0.0",
+    "@electron-toolkit/tsconfig": "^2.0.0",
+    "@types/node": "^24.19.2",
+    "@vitejs/plugin-vue": "^6.0.10",
+    "electron": "^44.7.2",
+    "electron-builder": "^26.15.3",
+    "electron-vite": "^6.0.0",
+    "eslint": "^10.12.0",
+    "eslint-plugin-vue": "^10.11.1",
+    "prettier": "^3.9.10",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.5",
+    "vue": "^3.5.44",
+    "vue-eslint-parser": "^10.4.1",
+    "vue-tsc": "^3.3.13"
+  }
+}

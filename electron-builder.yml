@@ -1,0 +1,53 @@
+appId: com.xiaohongshu.collector
+productName: 小红书评论采集
+directories:
+  buildResources: build
+  output: dist
+files:
+  - '!**/.vscode/*'
+  - '!src/*'
+  - '!tests/**'
+  - '!output/**'
+  - '!tmp/**'
+  - '!.mcp-bin/**'
+  - '!scripts/**'
+  - '!electron.vite.config.{js,ts,mjs,cjs}'
+  - '!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
+  - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
+  - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
+extraResources:
+  - from: .mcp-bin
+    to: mcp/bin
+  - from: resources/xiaohongshu-mcp
+    to: mcp/licenses
+asarUnpack:
+  - resources/**
+win:
+  executableName: xiaohongshu
+  icon: build/icon.ico
+  # MCP 是上游已发布并已校验的组件。避免 electron-builder 对它再次签名，
+  # 否则 Authenticode 签名会改变文件摘要，应用启动时会误判为损坏并重复下载。
+  signExts:
+    - '!xiaohongshu-mcp-windows-amd64.exe'
+    - '!xiaohongshu-mcp-windows-amd64-search-fix.exe'
+  target:
+    - target: nsis
+      arch:
+        - x64
+nsis:
+  artifactName: ${name}-${version}-windows-${arch}-setup.${ext}
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  installerLanguages:
+    - zh_CN
+    - en_US
+  displayLanguageSelector: false
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
+  shortcutName: ${productName}
+  uninstallDisplayName: ${productName}
+  createDesktopShortcut: always
+npmRebuild: false
+electronDownload:
+  mirror: https://npmmirror.com/mirrors/electron/

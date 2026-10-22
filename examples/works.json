@@ -1,0 +1,19 @@
+{
+  "works": [
+    {
+      "id": "example-work-01",
+      "title": "装修预算记录（格式示例）",
+      "description": "这是数据导入格式示例，请替换为实际获取的作品和评论。",
+      "url": null,
+      "comments": [
+        {
+          "id": "example-comment-01",
+          "content": "请问装修报价是多少？",
+          "nickname": "示例用户",
+          "userProfileUrl": null,
+          "publishedAt": null
+        }
+      ]
+    }
+  ]
+}

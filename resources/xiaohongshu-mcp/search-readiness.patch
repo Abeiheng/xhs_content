@@ -1,0 +1,37 @@
+--- a/xiaohongshu/search.go
++++ b/xiaohongshu/search.go
+@@ -115,9 +115,31 @@
+ 	page := s.page.Context(ctx).Timeout(60 * time.Second)
+ 
+ 	searchURL := makeSearchURL(keyword)
+-	page.MustNavigate(searchURL)
+-	page.MustWaitStable()
+-	page.MustWait(`() => window.__INITIAL_STATE__ !== undefined`)
++	if err := page.Navigate(searchURL); err != nil {
++		return nil, fmt.Errorf("搜索页导航失败: %w", err)
++	}
++	// 搜索页会持续请求图片/埋点，等待整页稳定可能在作品已显示时仍超时。
++	// 等待实际作品数据或明确的空结果/验证界面，避免过早读取空数组。
++	if err := page.Wait(rod.Eval(`() => {
++		const f = window.__INITIAL_STATE__?.search?.feeds;
++		const v = f ? (f.value !== undefined ? f.value : f._value) : null;
++		const text = document.body?.innerText || "";
++		return (Array.isArray(v) && v.length > 0) ||
++		    /没有找到相关|暂无相关|没有搜到|无搜索结果|安全验证|验证码|访问频繁/.test(text);
++	}`)); err != nil {
++		return nil, fmt.Errorf("等待搜索作品数据超时: %w", err)
++	}
++	verification, err := page.Eval(`() => {
++        const f = window.__INITIAL_STATE__?.search?.feeds;
++        const v = f ? (f.value !== undefined ? f.value : f._value) : null;
++        return !(Array.isArray(v) && v.length > 0) && /安全验证|验证码|访问频繁/.test(document.body?.innerText || "");
++    }`)
++	if err != nil {
++		return nil, fmt.Errorf("检查搜索页面失败: %w", err)
++	}
++	if verification.Value.Bool() {
++		return nil, fmt.Errorf("搜索页面需要手动验证，请显示采集浏览器完成验证后重试")
++	}
+ 	humanize.Delay(ctx, humanize.AfterNavigate)
+ 
+ 	if len(pending) > 0 {

@@ -1,0 +1,10 @@
+{
+  "version": "v2.5.5-search-ready.1",
+  "sourceSha256": "b7828830ef479ab8771fd42c6e7ef9bbe4a20875d0a61da5c341c581ef21ba8d",
+  "platforms": {
+    "darwin-arm64": {
+      "asset": "xiaohongshu-mcp-darwin-arm64-search-fix",
+      "sha256": "f20172973f9916fdd180aa7ac923ba61ea086a998e2707789b7f20c135f7a582"
+    }
+  }
+}

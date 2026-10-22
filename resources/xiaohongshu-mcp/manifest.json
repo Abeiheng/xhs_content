@@ -1,0 +1,21 @@
+{
+  "repository": "https://github.com/xpzouying/xiaohongshu-mcp",
+  "version": "v2.5.5",
+  "platforms": {
+    "darwin-arm64": {
+      "asset": "xiaohongshu-mcp-darwin-arm64",
+      "sha256": "fad3633fda4a8060e66e2941bc8fc5460326c7cb4e58a32485a9e2c9408e95a8",
+      "id": 582035749
+    },
+    "win32-x64": {
+      "asset": "xiaohongshu-mcp-windows-amd64.exe",
+      "sha256": "cb55674f90c1649c875be9c4cde3af193b02fc34ffc860c40c8d711e6ca53e27",
+      "id": 582035748
+    },
+    "linux-x64": {
+      "asset": "xiaohongshu-mcp-linux-amd64",
+      "sha256": "a4e99322156e7a169466e793045dadc3306c0792db3eade603e030cc0c1c2e3a",
+      "id": 582035750
+    }
+  }
+}

@@ -1,0 +1,17 @@
+node_modules
+dist
+out
+.DS_Store
+.eslintcache
+*.log*
+*.tmp
+*.tsbuildinfo
+.env
+.env.*
+
+.mcp-bin/
+output/
+tmp/
+coverage/
+.cache/
+.playwright*/
