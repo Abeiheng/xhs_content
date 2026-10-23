@@ -1,6 +1,6 @@
 {
   "name": "xiaohongshu",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "小红书公开评论关键词采集桌面工作台",
   "main": "./out/main/index.js",
   "author": "北恒",
@@ -20,7 +20,7 @@
     "build": "npm run typecheck && electron-vite build",
     "postinstall": "install-electron && electron-builder install-app-deps",
     "build:unpack": "pnpm build && electron-builder --dir --win --x64",
-    "build:win": "pnpm build && electron-builder --win --x64",
+    "build:win": "pnpm build && electron-builder --win --x64 --publish never",
     "test": "vitest run",
     "setup:mcp": "node scripts/install-mcp.mjs",
     "build:mcp": "node scripts/build-mcp.mjs"
