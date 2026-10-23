@@ -8,6 +8,7 @@ import type {
 } from './types'
 export const workTimeRanges: WorkTimeRange[] = ['不限', '一天内', '一周内', '半年内']
 export const maxWorksPerKeyword = 2000
+export const maxIntervalSeconds = 86_400
 export const defaults: Settings = {
   workTimeRange: '不限',
   workKeywords: [],
@@ -15,7 +16,7 @@ export const defaults: Settings = {
   commentGroups: [],
   activeCommentGroup: 0,
   replyIntervalSeconds: 10,
-  intervalMinutes: 1,
+  intervalSeconds: 60,
   worksPerKeyword: 10,
   theme: 'red'
 }
@@ -46,6 +47,13 @@ export function validateWorksPerKeyword(value: unknown): number {
   return value
 }
 export function validateSettings(value: FilterSettings): FilterSettings {
+  if (!value) throw new Error('设置格式无效')
+  const legacyMinutes = (value as FilterSettings & { intervalMinutes?: unknown }).intervalMinutes
+  const intervalSeconds =
+    value.intervalSeconds ??
+    (typeof legacyMinutes === 'number' && Number.isInteger(legacyMinutes)
+      ? legacyMinutes * 60
+      : undefined)
   if (
     !value ||
     (value.workKeywords !== undefined && !Array.isArray(value.workKeywords)) ||
@@ -67,11 +75,11 @@ export function validateSettings(value: FilterSettings): FilterSettings {
   if (!active.include.length) throw new Error('组合至少填写一个评论关键词')
   if (!commentKeywords.length) throw new Error('请填写评论关键词')
   if (
-    !Number.isInteger(value.intervalMinutes) ||
-    value.intervalMinutes < 1 ||
-    value.intervalMinutes > 1440
+    !Number.isInteger(intervalSeconds) ||
+    intervalSeconds < 1 ||
+    intervalSeconds > maxIntervalSeconds
   )
-    throw new Error('作品间隔请输入 1–1440 的整数')
+    throw new Error(`作品间隔请输入 1–${maxIntervalSeconds} 秒的整数`)
   if (workKeywords.length > 100 || commentKeywords.length > 100) throw new Error('关键词最多 100 个')
   const replyIntervalSeconds = value.replyIntervalSeconds ?? defaults.replyIntervalSeconds
   if (
@@ -89,7 +97,7 @@ export function validateSettings(value: FilterSettings): FilterSettings {
     commentGroups: normalizedGroups,
     activeCommentGroup,
     replyIntervalSeconds,
-    intervalMinutes: value.intervalMinutes,
+    intervalSeconds,
     worksPerKeyword: validateWorksPerKeyword(value.worksPerKeyword),
     mcpPath: typeof value.mcpPath === 'string' ? value.mcpPath.trim() : ''
   }
@@ -114,25 +122,26 @@ export function selectWorks(
           const time = work.publishedAt ? Date.parse(work.publishedAt) : NaN
           return time <= now && time >= cutoff.getTime()
         })
-  const selected = new Map<string, SelectedWork>()
   if (!keywords.length) return eligible.slice(0, limit).map((work) => ({ ...work, matchedKeywords: [] }))
-  for (const keyword of keywords) {
-    const seen = new Set<string>()
-    const matches = eligible
-      .filter((w) => {
-        if (seen.has(w.id) || !(includes(w.title, keyword) || includes(w.description, keyword)))
-          return false
-        seen.add(w.id)
-        return true
-      })
-      .slice(0, limit)
-    for (const work of matches) {
-      const existing = selected.get(work.id)
-      if (existing) existing.matchedKeywords.push(keyword)
-      else selected.set(work.id, { ...work, matchedKeywords: [keyword] })
-    }
-  }
-  return [...selected.values()]
+
+  // The quantity is the total number of candidate works to collect. Walk the
+  // candidates in their existing order, retaining every keyword matched by a
+  // selected work, and stop once the global limit is reached.
+  const seen = new Set<string>()
+  return eligible
+    .map((work) => ({
+      work,
+      matchedKeywords: keywords.filter(
+        (keyword) => includes(work.title, keyword) || includes(work.description, keyword)
+      )
+    }))
+    .filter(({ work, matchedKeywords }) => {
+      if (!matchedKeywords.length || seen.has(work.id)) return false
+      seen.add(work.id)
+      return true
+    })
+    .slice(0, limit)
+    .map(({ work, matchedKeywords }) => ({ ...work, matchedKeywords }))
 }
 export function safeUrl(value: string): string {
   const url = new URL(value)

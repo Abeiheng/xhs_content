@@ -21,7 +21,7 @@ const countdown = computed(
       }}</span>
     </div>
     <div class="task-meta" :title="task.currentTitle || '搜索候选作品'">
-      候选作品按搜索标题筛选 · 最多 {{ settings.worksPerKeyword }} 个
+      候选作品按搜索标题筛选 · 本次采集 {{ settings.worksPerKeyword }} 个
     </div>
     <el-tooltip
       v-if="task.groups.length"

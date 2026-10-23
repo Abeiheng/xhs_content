@@ -10,7 +10,7 @@ export interface FilterSettings {
   workTimeRange: WorkTimeRange
   workKeywords?: string[]
   commentKeywords: string[]
-  intervalMinutes: number
+  intervalSeconds: number
   worksPerKeyword: number
   commentGroups?: CommentKeywordGroup[]
   activeCommentGroup?: number

@@ -17,7 +17,7 @@ const settings: FilterSettings = {
   workTimeRange: '不限',
   workKeywords: ['装修', '报价'],
   commentKeywords: ['报价', '多少钱', '求推荐'],
-  intervalMinutes: 1,
+  intervalSeconds: 60,
   worksPerKeyword: 10,
   replyIntervalSeconds: 10,
   commentGroups: [],
@@ -38,7 +38,7 @@ const works: Work[] = [1, 2].map((n) => ({
 }))
 afterEach(() => vi.useRealTimers())
 describe('关键词与作品选择', () => {
-  it('每词按自定义数量截取，跨组去重后不补位；校验数量边界', () => {
+  it('按候选作品总数截取并保留每个作品命中的关键词；校验数量边界', () => {
     const data = [
       { ...works[0], id: 'both', title: '装修报价' },
       { ...works[0], id: 'decoration', title: '装修' },
@@ -46,7 +46,7 @@ describe('关键词与作品选择', () => {
       { ...works[0], id: 'extra', title: '装修报价' }
     ]
     const selected = selectWorks(data, ['装修', '报价'], '不限', Date.now(), 2)
-    expect(selected.map((w) => w.id)).toEqual(['both', 'decoration', 'price'])
+    expect(selected.map((w) => w.id)).toEqual(['both', 'decoration'])
     expect(selected[0].matchedKeywords).toEqual(['装修', '报价'])
     expect(selectWorks(data, ['装修'], '不限', Date.now(), 1)).toHaveLength(1)
     expect(selectWorks(data, ['装修'], '不限', Date.now(), 2000)).toHaveLength(3)
@@ -86,13 +86,13 @@ describe('关键词与作品选择', () => {
   it('中英文逗号、空项、重复项和拉丁字母大小写', () => {
     expect(parseKeywords(' 装修，报价,,装修, DIY,diy ')).toEqual(['装修', '报价', 'DIY'])
   })
-  it('每词先取10个，3个交集得到17个，不补第11个', () => {
+  it('作品数量限制作用于候选作品总数', () => {
     const queue = selectWorks(demoWorks(), settings.workKeywords)
-    expect(queue).toHaveLength(17)
+    expect(queue).toHaveLength(10)
     expect(queue.filter((w) => w.matchedKeywords.includes('装修'))).toHaveLength(10)
-    expect(queue.filter((w) => w.matchedKeywords.includes('报价'))).toHaveLength(10)
+    expect(queue.filter((w) => w.matchedKeywords.includes('报价'))).toHaveLength(3)
     expect(queue[7].matchedKeywords).toEqual(['装修', '报价'])
-    expect(queue.map((w) => w.id)).toEqual(demoWorks().map((w) => w.id))
+    expect(queue.map((w) => w.id)).toEqual(demoWorks().slice(0, 10).map((w) => w.id))
   })
   it('同标题不同ID保留；重复ID仅占一个组内名额', () => {
     const data = [
@@ -105,8 +105,8 @@ describe('关键词与作品选择', () => {
     expect(() => selectWorks([{ ...works[0], id: '' }], ['装修'])).toThrow('ID')
   })
   it('阻止无效规则与非 http 链接', () => {
-    for (const value of [0, 1.5, 1441, NaN])
-      expect(() => validateSettings({ ...settings, intervalMinutes: value })).toThrow()
+    for (const value of [0, 1.5, 86401, NaN])
+      expect(() => validateSettings({ ...settings, intervalSeconds: value })).toThrow()
     expect(validateSettings({ ...settings, workKeywords: [] }).workKeywords).toEqual([])
     for (const url of ['javascript:alert(1)', 'file:///tmp/test', 'https://user:pass@example.com'])
       expect(() => safeUrl(url)).toThrow()
@@ -240,7 +240,7 @@ describe('串行调度', () => {
       () => {}
     )
     task.start(works, rule, 'import')
-    rule.intervalMinutes = 2
+    rule.intervalSeconds = 120
     await Promise.resolve()
     await Promise.resolve()
     expect(save.mock.calls[0][0]).toEqual([])

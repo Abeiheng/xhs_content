@@ -22,7 +22,7 @@ function cloneGroups(settings: Settings): CommentKeywordGroup[] {
 }
 const groups = ref<CommentKeywordGroup[]>(cloneGroups(props.settings))
 const activeGroup = ref(props.settings.activeCommentGroup || 0)
-const interval = ref<number | undefined>(props.settings.intervalMinutes)
+const interval = ref<number | undefined>(props.settings.intervalSeconds)
 const timeRange = ref(props.settings.workTimeRange)
 const worksPerKeyword = ref<number | undefined>(props.settings.worksPerKeyword)
 const replyIntervalSeconds = ref<number | undefined>(props.settings.replyIntervalSeconds)
@@ -47,7 +47,7 @@ const themes: { id: Theme; name: string; color: string }[] = [
 const dirty = computed(
   () =>
     JSON.stringify(groups.value) !== JSON.stringify(props.settings.commentGroups || [{ name: '默认组合', include: props.settings.commentKeywords, exclude: [] }]) ||
-    interval.value !== props.settings.intervalMinutes ||
+    interval.value !== props.settings.intervalSeconds ||
     timeRange.value !== props.settings.workTimeRange ||
     worksPerKeyword.value !== props.settings.worksPerKeyword ||
     replyIntervalSeconds.value !== props.settings.replyIntervalSeconds
@@ -101,10 +101,12 @@ function save(): void {
   }
   emit('save', {
     workTimeRange: timeRange.value,
-    commentKeywords: currentGroup.value!.include,
+    // Convert the reactive array to a plain array before crossing Electron's
+    // IPC boundary; structuredClone cannot clone Vue proxies.
+    commentKeywords: [...currentGroup.value!.include],
     commentGroups: plainGroups(),
     activeCommentGroup: activeGroup.value,
-    intervalMinutes: interval.value!,
+    intervalSeconds: interval.value!,
     worksPerKeyword: worksPerKeyword.value!,
     replyIntervalSeconds: replyIntervalSeconds.value!,
     mcpPath: mcpPath.value.trim()
@@ -113,7 +115,7 @@ function save(): void {
 function markSaved(settings: Settings): void {
   groups.value = cloneGroups(settings)
   activeGroup.value = settings.activeCommentGroup || 0
-  interval.value = settings.intervalMinutes
+  interval.value = settings.intervalSeconds
   timeRange.value = settings.workTimeRange
   worksPerKeyword.value = settings.worksPerKeyword
   replyIntervalSeconds.value = settings.replyIntervalSeconds
@@ -136,7 +138,7 @@ defineExpose({ focusMissing, markSaved, setMcpPath })
     <div class="settings-scroll">
       <p v-if="locked" class="locked-note">任务结束后可修改筛选规则</p>
       <div class="form-field">
-        <label for="works-per-keyword">每次采集作品数量</label>
+        <label for="works-per-keyword">每次采集候选作品数量</label>
         <div class="interval-field">
           <el-input-number
             id="works-per-keyword"
@@ -145,11 +147,11 @@ defineExpose({ focusMissing, markSaved, setMcpPath })
             :disabled="locked"
             :min="1"
             :max="maxWorksPerKeyword"
-            aria-label="每次采集作品数量"
+            aria-label="每次采集候选作品数量"
           /><span>个</span>
         </div>
         <p v-if="errors.quantity" class="field-error" role="alert">{{ errors.quantity }}</p>
-        <p class="help">默认 10 个，可设 1–{{ maxWorksPerKeyword }} 个；从候选作品中按顺序采集。</p>
+        <p class="help">默认 10 个候选作品，可设 1–{{ maxWorksPerKeyword }} 个；按候选顺序采集。</p>
       </div>
       <div class="form-field">
         <label for="mcp-path">MCP 组件路径</label>
@@ -218,7 +220,7 @@ defineExpose({ focusMissing, markSaved, setMcpPath })
         <p class="help">命中任意屏蔽词的评论不会显示；屏蔽词优先。</p>
       </div>
       <div class="form-field">
-        <label for="work-interval">作品间隔</label>
+        <label for="work-interval">作品间隔（秒）</label>
         <div class="interval-field">
           <el-input-number
             id="work-interval"
@@ -226,12 +228,12 @@ defineExpose({ focusMissing, markSaved, setMcpPath })
             :controls="false"
             :disabled="locked"
             :min="1"
-            :max="1440"
-            aria-label="作品间隔（分钟）"
-          /><span>分钟</span>
+            :max="86400"
+            aria-label="作品间隔（秒）"
+          /><span>秒</span>
         </div>
         <p v-if="errors.interval" class="field-error" role="alert">{{ errors.interval }}</p>
-        <p class="help">当前作品完成后开始等待</p>
+        <p class="help">当前作品完成后开始等待；默认 60 秒，最多 86400 秒</p>
       </div>
       <div class="form-field">
         <label for="work-time-range">作品发布时间范围</label>

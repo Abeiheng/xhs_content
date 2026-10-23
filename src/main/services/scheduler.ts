@@ -164,7 +164,7 @@ export class Scheduler {
         this.state.remainingSeconds = 0
         this.changed()
       } else {
-        this.remainingMs = this.settings.intervalMinutes * 60_000
+        this.remainingMs = this.settings.intervalSeconds * 1000
         this.beginWait()
       }
     } catch {

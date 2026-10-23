@@ -1,6 +1,6 @@
 {
   "name": "xiaohongshu",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "小红书公开评论关键词采集桌面工作台",
   "main": "./out/main/index.js",
   "author": "北恒",

@@ -31,10 +31,16 @@ export class Storage {
           throw new Error('keywords')
         if (!workTimeRanges.includes(saved.workTimeRange ?? '不限')) throw new Error('time range')
         if (saved.workKeywords.length || saved.commentKeywords.length) validateSettings(saved)
-        else if (saved.intervalMinutes !== 1) throw new Error('settings')
+        else if (saved.intervalSeconds !== 60 && saved.intervalMinutes !== 1)
+          throw new Error('settings')
+        const intervalSeconds =
+          Number.isInteger(saved.intervalSeconds)
+            ? saved.intervalSeconds
+            : saved.intervalMinutes * 60
         this.settings = {
           ...structuredClone(defaults),
           ...saved,
+          intervalSeconds,
           worksPerKeyword: validateWorksPerKeyword(saved.worksPerKeyword),
           replyIntervalSeconds:
             Number.isInteger(saved.replyIntervalSeconds) && saved.replyIntervalSeconds >= 0
